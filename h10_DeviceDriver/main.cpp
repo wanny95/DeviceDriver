@@ -1,5 +1,6 @@
 #include "gmock/gmock.h"
 #include "device_driver.h"
+#include "Application.h"
 #include <string>
 
 using namespace testing;
@@ -71,9 +72,6 @@ TEST_F(DeviceDriverFixture, WriteToHWCallSuccess) {
 
 	//act
 	driver.write(0xBB, 0);
-
-	//assert
-	EXPECT_EQ(true, true);
 }
 
 TEST_F(DeviceDriverFixture, WriteToHWCallFail) {
@@ -93,6 +91,32 @@ TEST_F(DeviceDriverFixture, WriteToHWCallFail) {
 		//assert
 		EXPECT_EQ(string{ e.what() }, string{ "WriteFailException" });
 	}
+}
+
+
+TEST_F(DeviceDriverFixture, AppReadFromHWSuccess) {
+	//arrange
+	EXPECT_CALL(mock, read)
+		.Times(25)
+		.WillRepeatedly(Return(0xA));
+
+	Application app{ &driver };
+	//act
+	app.readAndPrint(0x00, 0x04);
+}
+
+TEST_F(DeviceDriverFixture, AppWriteToHWSuccess) {
+	//arrange
+	EXPECT_CALL(mock, read)
+		.Times(5)
+		.WillRepeatedly(Return(0xFF));
+
+	EXPECT_CALL(mock, write)
+		.Times(5);
+
+	Application app{ &driver };
+	//act
+	app.writeAll(0x0B);
 }
 
 int main()
