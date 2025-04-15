@@ -14,8 +14,10 @@ public:
 
 class DeviceDriverFixture : public Test {
 public:
-	MockFlashDevice mock;
 	const int NEED_READ_TIMES = 5;
+	const int NEED_WRITE_TIMES = 1;
+	MockFlashDevice mock;
+	DeviceDriver driver{ &mock };
 };
 
 TEST_F(DeviceDriverFixture, ReadFromHW5TimeSuccess) {
@@ -23,9 +25,9 @@ TEST_F(DeviceDriverFixture, ReadFromHW5TimeSuccess) {
 	EXPECT_CALL(mock, read(0xBB))
 		.Times(NEED_READ_TIMES);
 
-	DeviceDriver driver{ &mock };
 	//act
 	int data = driver.read(0xBB);
+
 	//assert
 	EXPECT_EQ(0, data);
 }
@@ -36,7 +38,6 @@ TEST_F(DeviceDriverFixture, ReadFromHW5TimeFail) {
 		.WillOnce(Return(0))
 		.WillRepeatedly(Return(5));
 
-	DeviceDriver driver{ &mock };
 	try {
 		//act
 		int data = driver.read(0xBB);
@@ -54,12 +55,45 @@ TEST_F(DeviceDriverFixture, ReadFromHW5TimeValueSuccess) {
 		.Times(NEED_READ_TIMES)
 		.WillRepeatedly(Return(0));
 
-	DeviceDriver driver{ &mock };
+	//act
 	int data = driver.read(0xBB);
 	//assert
 	EXPECT_EQ(0, data);
 }
 
+TEST_F(DeviceDriverFixture, WriteToHWCallSuccess) {
+	//arrange
+	EXPECT_CALL(mock, read)
+		.WillRepeatedly(Return(0xFF));
+
+	EXPECT_CALL(mock, write)
+		.Times(1);
+
+	//act
+	driver.write(0xBB, 0);
+
+	//assert
+	EXPECT_EQ(true, true);
+}
+
+TEST_F(DeviceDriverFixture, WriteToHWCallFail) {
+	//arrange
+	EXPECT_CALL(mock, read)
+		.WillRepeatedly(Return(0xBB));
+
+	EXPECT_CALL(mock, write)
+		.Times(0);
+
+	try {
+		//act
+		driver.write(0xBB, 0);
+		FAIL();
+	}
+	catch (const WriteFailException& e) {
+		//assert
+		EXPECT_EQ(string{ e.what() }, string{ "WriteFailException" });
+	}
+}
 
 int main()
 {
