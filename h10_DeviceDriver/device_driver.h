@@ -1,5 +1,6 @@
 #pragma once
 #include "flash_memory_device.h"
+#include <stdexcept>
 
 class DeviceDriver
 {
