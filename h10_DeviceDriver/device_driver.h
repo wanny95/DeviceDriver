@@ -2,6 +2,12 @@
 #include "flash_memory_device.h"
 #include <stdexcept>
 
+class ReadFailException : public std::exception {
+public:
+    explicit ReadFailException(char const* _Message);
+    char const* what() const override;
+};
+
 class DeviceDriver
 {
 public:

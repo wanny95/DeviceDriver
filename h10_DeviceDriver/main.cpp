@@ -1,7 +1,9 @@
 #include "gmock/gmock.h"
 #include "device_driver.h"
+#include <string>
 
 using namespace testing;
+using std::string;
 
 class MockFlashDevice : public FlashMemoryDevice {
 public:
@@ -10,9 +12,13 @@ public:
 	MOCK_METHOD(void, write, (long address, unsigned char data), (override));
 };
 
-TEST(DeviceDriver, ReadFromHW5TimeSuccess) {
-
+class DeviceDriverFixture : public Test {
+public:
 	MockFlashDevice mock;
+};
+
+TEST_F(DeviceDriverFixture, ReadFromHW5TimeSuccess) {
+
 	EXPECT_CALL(mock, read(0xBB))
 		.Times(5);
 
@@ -20,6 +26,23 @@ TEST(DeviceDriver, ReadFromHW5TimeSuccess) {
 	int data = driver.read(0xBB);
 
 	EXPECT_EQ(0, data);
+}
+
+TEST_F(DeviceDriverFixture, ReadFromHW5TimeFail) {
+
+	EXPECT_CALL(mock, read)
+		.WillOnce(Return(0))
+		.WillRepeatedly(Return(5));
+
+	DeviceDriver driver{ &mock };
+	//act
+	try {
+		int data = driver.read(0xBB);
+		FAIL();
+	}
+	catch (const ReadFailException& e) {
+		EXPECT_EQ(string{ e.what() }, string{ "ReadFailException" });
+	}
 }
 
 int main()
